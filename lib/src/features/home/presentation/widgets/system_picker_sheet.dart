@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/wallpaper/models/wallpaper_system.dart';
-import '../home_cubit.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
 
 class SystemPickerSheet extends StatelessWidget {
   const SystemPickerSheet({
@@ -47,7 +46,3 @@ class SystemPickerSheet extends StatelessWidget {
     );
   }
 }
-
-// Quiet the analyzer.
-// ignore: unused_element
-typedef _ = HomeState;

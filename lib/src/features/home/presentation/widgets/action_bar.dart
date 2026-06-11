@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../home_cubit.dart';
+import 'package:random_wallpaper_generator/src/features/home/presentation/home_cubit.dart';
 
 class ActionBar extends StatelessWidget {
   const ActionBar({

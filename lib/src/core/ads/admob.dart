@@ -5,7 +5,9 @@ class AdMobService {
   AdMobService();
 
   bool _initialized = false;
-  bool _killSwitch = false;
+
+  /// Remote kill switch. Wire to Firebase Remote Config in v0.2.
+  bool killSwitch = false;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -14,17 +16,12 @@ class AdMobService {
   }
 
   void showBanner() {
-    if (_killSwitch) return;
+    if (killSwitch) return;
     if (kDebugMode) debugPrint('AdMobService: showBanner (stub)');
   }
 
   void showInterstitial() {
-    if (_killSwitch) return;
+    if (killSwitch) return;
     if (kDebugMode) debugPrint('AdMobService: showInterstitial (stub)');
-  }
-
-  /// Remote kill switch. Wire to Firebase Remote Config in v0.2.
-  void setKillSwitch(bool kill) {
-    _killSwitch = kill;
   }
 }

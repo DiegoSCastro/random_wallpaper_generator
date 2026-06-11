@@ -1,10 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../generator.dart';
-import '../models/generator_params.dart';
-import '../models/wallpaper_point.dart';
-import '../models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_point.dart';
 
 /// Rossler 3D attractor. Spiral roll pattern. Projects to XY.
 class RosslerGenerator implements Generator {
@@ -21,9 +20,13 @@ class RosslerGenerator implements Generator {
   }) {
     const dt = 0.05;
     const warmup = 2000;
-    final a = params.a, b = params.b, c = params.c;
+    final a = params.a;
+    final b = params.b;
+    final c = params.c;
 
-    var x = 0.1, y = 0.0, z = 0.0;
+    var x = 0.1;
+    var y = 0.0;
+    var z = 0.0;
     if (seed != null) {
       final r = math.Random(seed);
       x = (r.nextDouble() - 0.5) * 0.1;
@@ -39,8 +42,10 @@ class RosslerGenerator implements Generator {
 
     final rawX = Float64List(maxPoints);
     final rawY = Float64List(maxPoints);
-    var minX = double.infinity, maxX = -double.infinity;
-    var minY = double.infinity, maxY = -double.infinity;
+    var minX = double.infinity;
+    var maxX = -double.infinity;
+    var minY = double.infinity;
+    var maxY = -double.infinity;
 
     for (var i = 0; i < maxPoints; i++) {
       x += dt * (-y - z);

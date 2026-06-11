@@ -1,10 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../generator.dart';
-import '../models/generator_params.dart';
-import '../models/wallpaper_point.dart';
-import '../models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_point.dart';
 
 /// 3D Lorenz attractor. Projects to XY plane (classic butterfly).
 class LorenzGenerator implements Generator {
@@ -46,8 +45,10 @@ class LorenzGenerator implements Generator {
 
     final rawX = Float64List(maxPoints);
     final rawY = Float64List(maxPoints);
-    var minX = double.infinity, maxX = -double.infinity;
-    var minY = double.infinity, maxY = -double.infinity;
+    var minX = double.infinity;
+    var maxX = -double.infinity;
+    var minY = double.infinity;
+    var maxY = -double.infinity;
 
     for (var i = 0; i < maxPoints; i++) {
       final nx = x + dt * sigma * (y - x);

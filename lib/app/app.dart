@@ -40,7 +40,6 @@ class RandomWallpaperGeneratorApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.system,
         routes: {
           '/': (_) => const HomeScreen(),
           '/home': (_) => const HomeScreen(),

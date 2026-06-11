@@ -1,13 +1,16 @@
 # random_wallpaper_generator
 
-Mathematical wallpaper generator for Android. Generates infinite procedural wallpapers using dynamical systems (Lorenz, Clifford, Hopalong, Aizawa, Rossler) rendered via Flutter CustomPainter and GLSL fragment shaders. Lightweight, GPU-accelerated, offline-first.
+Mathematical wallpaper generator for Android and iOS. Generates infinite procedural wallpapers using dynamical systems (Lorenz, Clifford, Hopalong, Aizawa, Rossler) rendered via Flutter CustomPainter and GLSL fragment shaders. Lightweight, GPU-accelerated, offline-first.
 
 ## Quick start
 
 ```bash
 flutter pub get
-flutter run                    # debug
-flutter build apk --debug      # APK
+flutter run                    # debug (pick device in IDE or use -d)
+flutter run -d android         # Android emulator/device
+flutter run -d ios             # iOS Simulator
+flutter build apk --debug      # Android APK
+flutter build ios --simulator  # iOS Simulator build (no code signing)
 flutter test                   # unit tests
 flutter analyze                # static analysis
 ```
@@ -59,7 +62,6 @@ Each generator is a `WallpaperGenerator` — pure function `(seed, params) -> Im
 
 - **Curated daily wallpaper** (server-side 1 PNG/day) — see `docs/curated-daily.md`
 - Live wallpaper service (Android `WallpaperService`)
-- iOS support
 - Cloud sync of favorites
 - Community gallery
 

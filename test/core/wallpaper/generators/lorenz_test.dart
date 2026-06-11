@@ -4,7 +4,7 @@ import 'package:random_wallpaper_generator/src/core/wallpaper/generators/lorenz.
 void main() {
   group('LorenzGenerator', () {
     test('produces 200k points within [0..1] range', () {
-      final gen = const LorenzGenerator();
+      const gen = LorenzGenerator();
       final points = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 200000),
         maxPoints: 200000,
@@ -22,7 +22,7 @@ void main() {
     // by a small epsilon derived from the seed, or skip warmup and snap
     // to different sectors of the attractor.
     test('produces deterministic output for the same params (no seed)', () {
-      final gen = const LorenzGenerator();
+      const gen = LorenzGenerator();
       final a = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 1000),
         maxPoints: 1000,

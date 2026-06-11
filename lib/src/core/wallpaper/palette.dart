@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/painting.dart';
 
 /// Built-in palettes. Each is a [List] of colors that the renderer samples
@@ -14,6 +16,12 @@ enum WallpaperPalette {
 
   final String label;
   final String description;
+
+  static WallpaperPalette random([math.Random? random]) {
+    const values = WallpaperPalette.values;
+    final r = random ?? math.Random();
+    return values[r.nextInt(values.length)];
+  }
 
   /// Returns the colors for this palette. Index 0 = background, 1.. = trail.
   List<Color> colors() {

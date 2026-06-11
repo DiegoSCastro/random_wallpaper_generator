@@ -2,14 +2,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'models/generator_params.dart';
-import 'models/wallpaper_point.dart';
-import 'palette.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_point.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/palette.dart';
 
 /// Renders a list of [WallpaperPoint] into a [ui.Image] using Canvas operations.
 ///
 /// The renderer is pure: it takes the points + a palette and produces an
-/// image. No I/O. Designed to run inside a `compute()` isolate.
+/// image. No I/O. Must run on the root isolate (Canvas APIs are unavailable
+/// in background isolates on iOS).
 class WallpaperRenderer {
   const WallpaperRenderer();
 

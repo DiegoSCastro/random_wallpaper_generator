@@ -15,8 +15,8 @@ class FavoritesRepository {
       // Compress metadata only; bytes are saved to disk in v0.2.
       await prefs.setString('favorite_$name', 'saved_${DateTime.now().millisecondsSinceEpoch}');
       return const Right(unit);
-    } catch (e) {
-      return Left(e as Exception);
+    } on Exception catch (e) {
+      return Left(e);
     }
   }
 
@@ -24,7 +24,7 @@ class FavoritesRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getKeys().where((k) => k.startsWith('favorite_')).toList();
-    } catch (_) {
+    } on Exception catch (_) {
       return const [];
     }
   }
@@ -33,7 +33,7 @@ class FavoritesRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(key);
-    } catch (_) {
+    } on Exception catch (_) {
       // best-effort
     }
   }

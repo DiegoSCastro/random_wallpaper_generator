@@ -1,3 +1,5 @@
+import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart' show Generator;
+
 /// Available dynamical systems in v0.1.
 ///
 /// Each system maps to a [Generator] implementation in the registry.

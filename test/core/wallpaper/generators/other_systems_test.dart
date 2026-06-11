@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/aizawa.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/clifford.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/hopalong.dart';
-import 'package:random_wallpaper_generator/src/core/wallpaper/generators/aizawa.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/rossler.dart';
 
 void main() {
   group('CliffordGenerator', () {
     test('produces points in [0..1]', () {
-      final gen = const CliffordGenerator();
+      const gen = CliffordGenerator();
       final points = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 10000),
         maxPoints: 10000,
@@ -22,7 +22,7 @@ void main() {
 
   group('HopalongGenerator', () {
     test('produces points in [0..1]', () {
-      final gen = const HopalongGenerator();
+      const gen = HopalongGenerator();
       final points = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 10000),
         maxPoints: 10000,
@@ -37,7 +37,7 @@ void main() {
 
   group('AizawaGenerator', () {
     test('produces points in [0..1]', () {
-      final gen = const AizawaGenerator();
+      const gen = AizawaGenerator();
       final points = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 10000),
         maxPoints: 10000,
@@ -52,7 +52,7 @@ void main() {
 
   group('RosslerGenerator', () {
     test('produces points in [0..1]', () {
-      final gen = const RosslerGenerator();
+      const gen = RosslerGenerator();
       final points = gen.generate(
         params: gen.defaultParams.copyWith(iterations: 10000),
         maxPoints: 10000,

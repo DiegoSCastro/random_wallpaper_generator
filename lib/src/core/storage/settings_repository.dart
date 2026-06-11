@@ -1,8 +1,7 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/palette.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../wallpaper/models/wallpaper_system.dart';
-import '../wallpaper/palette.dart';
 
 /// Persists user settings (system, palette, quality) in SharedPreferences.
 class SettingsRepository {
@@ -18,8 +17,8 @@ class SettingsRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kSystem, system.name);
       return const Right(unit);
-    } catch (e) {
-      return Left(e as Exception);
+    } on Exception catch (e) {
+      return Left(e);
     }
   }
 
@@ -29,7 +28,7 @@ class SettingsRepository {
       final name = prefs.getString(_kSystem);
       if (name == null) return WallpaperSystem.lorenz;
       return WallpaperSystem.fromName(name);
-    } catch (_) {
+    } on Exception catch (_) {
       return WallpaperSystem.lorenz;
     }
   }
@@ -39,8 +38,8 @@ class SettingsRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kPalette, palette.name);
       return const Right(unit);
-    } catch (e) {
-      return Left(e as Exception);
+    } on Exception catch (e) {
+      return Left(e);
     }
   }
 
@@ -53,7 +52,7 @@ class SettingsRepository {
         (p) => p.name == name,
         orElse: () => WallpaperPalette.aurora,
       );
-    } catch (_) {
+    } on Exception catch (_) {
       return WallpaperPalette.aurora;
     }
   }
@@ -63,8 +62,8 @@ class SettingsRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_kIterations, iterations);
       return const Right(unit);
-    } catch (e) {
-      return Left(e as Exception);
+    } on Exception catch (e) {
+      return Left(e);
     }
   }
 
@@ -72,18 +71,18 @@ class SettingsRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(_kIterations) ?? 200000;
-    } catch (_) {
+    } on Exception catch (_) {
       return 200000;
     }
   }
 
-  Future<Either<Exception, Unit>> setPro(bool isPro) async {
+  Future<Either<Exception, Unit>> setPro({required bool isPro}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kIsPro, isPro);
       return const Right(unit);
-    } catch (e) {
-      return Left(e as Exception);
+    } on Exception catch (e) {
+      return Left(e);
     }
   }
 
@@ -91,7 +90,7 @@ class SettingsRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(_kIsPro) ?? false;
-    } catch (_) {
+    } on Exception catch (_) {
       return false;
     }
   }

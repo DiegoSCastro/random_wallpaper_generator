@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import 'generator.dart';
-import 'generators/aizawa.dart';
-import 'generators/clifford.dart';
-import 'generators/hopalong.dart';
-import 'generators/lorenz.dart';
-import 'generators/rossler.dart';
-import 'models/generator_params.dart';
-import 'models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/aizawa.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/clifford.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/hopalong.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/lorenz.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/rossler.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
 
 /// Maps a [WallpaperSystem] to its [Generator] implementation.
 ///

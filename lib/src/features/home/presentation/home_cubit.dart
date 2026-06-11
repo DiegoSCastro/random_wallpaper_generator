@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:equatable/equatable.dart';
@@ -76,14 +77,29 @@ class HomeCubit extends Cubit<HomeState> {
     await regenerate();
   }
 
-  Future<void> regenerate() async {
-    emit(state.copyWith(status: HomeStatus.generating, lastError: null));
+  Future<void> regenerate({
+    bool randomizeParams = true,
+    bool randomizePalette = true,
+  }) async {
+    final random = math.Random();
+    final params = randomizeParams
+        ? GeneratorParams.randomized(state.system, random)
+        : state.params;
+    final palette = randomizePalette
+        ? WallpaperPalette.random(random)
+        : state.palette;
+
+    emit(state.copyWith(
+      status: HomeStatus.generating,
+      params: params,
+      palette: palette,
+    ));
     try {
       final generator = _registry.forSystem(state.system);
       final result = await _generate(
         generator: generator,
-        params: state.params,
-        palette: state.palette,
+        params: params,
+        palette: palette,
         width: 1080,
         height: 1920,
       );
@@ -100,23 +116,20 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> changeSystem(WallpaperSystem system) async {
-    emit(state.copyWith(
-      system: system,
-      params: GeneratorParams.defaultsFor(system),
-    ));
+    emit(state.copyWith(system: system));
     await regenerate();
   }
 
   Future<void> changePalette(WallpaperPalette palette) async {
     emit(state.copyWith(palette: palette));
-    await regenerate();
+    await regenerate(randomizePalette: false);
   }
 
   Future<void> apply(BuildContext context) async {
     if (!state.isReady) return;
     final path = await saveImageAsPng(state.image!);
     if (!context.mounted) return;
-    await ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Saved to $path — apply from your gallery.')),
     );
   }
@@ -125,7 +138,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (!state.isReady) return;
     final path = await saveImageAsPng(state.image!);
     if (!context.mounted) return;
-    await ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Saved to $path')),
     );
   }
@@ -137,45 +150,37 @@ Future<ui.Image> _generate({
   required WallpaperPalette palette,
   required int width,
   required int height,
-}) {
-  return compute(
-    _renderJobIsolate,
-    _JobInput(
+}) async {
+  final points = await compute(
+    _generatePointsIsolate,
+    _PointsJob(
       generator: generator,
       params: params,
-      palette: palette,
-      width: width,
-      height: height,
     ),
-  );
-}
-
-class _JobInput {
-  const _JobInput({
-    required this.generator,
-    required this.params,
-    required this.palette,
-    required this.width,
-    required this.height,
-  });
-  final Generator generator;
-  final GeneratorParams params;
-  final WallpaperPalette palette;
-  final int width;
-  final int height;
-}
-
-Future<ui.Image> _renderJobIsolate(_JobInput job) async {
-  final points = job.generator.generate(
-    params: job.params,
-    maxPoints: job.params.iterations,
   );
   return const WallpaperRenderer().render(
     points: points,
-    palette: job.palette,
+    palette: palette,
+    params: params,
+    width: width,
+    height: height,
+  );
+}
+
+class _PointsJob {
+  const _PointsJob({
+    required this.generator,
+    required this.params,
+  });
+  final Generator generator;
+  final GeneratorParams params;
+}
+
+List<WallpaperPoint> _generatePointsIsolate(_PointsJob job) {
+  return job.generator.generate(
     params: job.params,
-    width: job.width,
-    height: job.height,
+    maxPoints: job.params.iterations,
+    seed: job.params.seed,
   );
 }
 

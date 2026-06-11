@@ -1,10 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../generator.dart';
-import '../models/generator_params.dart';
-import '../models/wallpaper_point.dart';
-import '../models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_point.dart';
 
 /// Martin / Hopalong 2D fractal. Web-like fractal curves.
 class HopalongGenerator implements Generator {
@@ -20,7 +19,9 @@ class HopalongGenerator implements Generator {
     int? seed,
   }) {
     const warmup = 1000;
-    final a = params.a, b = params.b, c = params.c;
+    final a = params.a;
+    final b = params.b;
+    final c = params.c;
 
     var x = 0.0;
     var y = 0.0;
@@ -39,8 +40,10 @@ class HopalongGenerator implements Generator {
 
     final rawX = Float64List(maxPoints);
     final rawY = Float64List(maxPoints);
-    var minX = double.infinity, maxX = -double.infinity;
-    var minY = double.infinity, maxY = -double.infinity;
+    var minX = double.infinity;
+    var maxX = -double.infinity;
+    var minY = double.infinity;
+    var maxY = -double.infinity;
 
     for (var i = 0; i < maxPoints; i++) {
       final t = x;
