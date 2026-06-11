@@ -10,6 +10,7 @@ import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_s
 import 'package:random_wallpaper_generator/src/core/wallpaper/palette.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/render_pipeline.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/themes.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 
 enum HomeStatus { initial, generating, ready, error }
@@ -123,6 +124,21 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> changePalette(WallpaperPalette palette) async {
     emit(state.copyWith(palette: palette));
     await regenerate(randomizePalette: false);
+  }
+
+  /// Apply a curated [WallpaperTheme] — system, params, and palette in
+  /// one shot. Bypasses randomization so the result matches the theme's
+  /// hand-tuned coefficients exactly.
+  Future<void> applyTheme(WallpaperTheme theme) async {
+    emit(state.copyWith(
+      system: theme.system,
+      params: theme.params,
+      palette: theme.palette,
+    ));
+    await regenerate(
+      randomizeParams: false,
+      randomizePalette: false,
+    );
   }
 
   Future<void> saveToGallery(BuildContext context) async {

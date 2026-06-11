@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/palette.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/themes.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/home_cubit.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/action_bar.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/apply_wallpaper_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/system_picker_sheet.dart';
+import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/theme_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/wallpaper_canvas.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -36,6 +39,11 @@ class _HomeView extends StatelessWidget {
         title: const Text('Random Wallpaper'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.collections_bookmark_rounded),
+            tooltip: 'Themes',
+            onPressed: () => _openThemePicker(context, context.read<HomeCubit>()),
+          ),
+          IconButton(
             icon: const Icon(Icons.tune_rounded),
             tooltip: 'Settings',
             onPressed: () => Navigator.of(context).pushNamed('/settings'),
@@ -48,7 +56,16 @@ class _HomeView extends StatelessWidget {
           return Stack(
             fit: StackFit.expand,
             children: [
-              WallpaperCanvas(state: state),
+              // Tap-and-hold the canvas to re-palette: the cubit re-renders
+              // with a different palette on every tap so the wallpaper
+              // morphs instantly. Long-press = re-roll palette.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: state.isReady ? () => cubit.changePalette(_nextPalette(state.palette)) : null,
+                onLongPress:
+                    state.isReady ? () => cubit.changePalette(WallpaperPalette.random()) : null,
+                child: WallpaperCanvas(state: state),
+              ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -110,6 +127,26 @@ class _HomeView extends StatelessWidget {
     if (picked != null) {
       await cubit.changeSystem(picked);
     }
+  }
+
+  Future<void> _openThemePicker(BuildContext context, HomeCubit cubit) async {
+    final picked = await showModalBottomSheet<WallpaperTheme>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => const ThemePickerSheet(),
+    );
+    if (picked != null) {
+      await cubit.applyTheme(picked);
+    }
+  }
+
+  /// Picks the next palette in the enum, cycling back to the start.
+  /// Used by the tap gesture on the canvas so users can cycle palettes
+  /// without seeing the same one twice in a row.
+  WallpaperPalette _nextPalette(WallpaperPalette current) {
+    const values = WallpaperPalette.values;
+    final next = (current.index + 1) % values.length;
+    return values[next];
   }
 }
 

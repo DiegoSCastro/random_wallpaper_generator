@@ -60,6 +60,18 @@ class _RenderJob {
   final int height;
 }
 
+class PixelBuffer {
+  const PixelBuffer({
+    required this.width,
+    required this.height,
+    required this.pixels,
+  });
+
+  final int width;
+  final int height;
+  final Uint8List pixels;
+}
+
 PixelBuffer _renderInIsolate(_RenderJob job) {
   final points = job.generator.generate(
     params: job.params,
