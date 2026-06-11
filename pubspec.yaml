@@ -34,8 +34,11 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^9.1.1
   fpdart: ^1.2.0
+  gal: ^2.3.2
   path_provider: ^2.1.5
+  share_plus: ^13.1.0
   shared_preferences: ^2.5.3
+  wallpaper_manager_flutter: ^1.0.1
 
 dev_dependencies:
   bloc_test: ^10.0.0

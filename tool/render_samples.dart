@@ -24,8 +24,8 @@ Future<void> main() async {
   if (outDir.existsSync()) outDir.deleteSync(recursive: true);
   outDir.createSync(recursive: true);
 
-  final registry = const WallpaperRegistry();
-  final renderer = const WallpaperRenderer();
+  const registry = WallpaperRegistry();
+  const renderer = WallpaperRenderer();
 
   var count = 0;
   for (final system in WallpaperSystem.values) {
@@ -35,7 +35,7 @@ Future<void> main() async {
       );
       final generator = registry.forSystem(system);
       final points = generator.generate(params: params, maxPoints: iterations);
-      final image = renderer.render(
+      final image = await renderer.render(
         points: points,
         palette: palette,
         params: params,
@@ -50,6 +50,7 @@ Future<void> main() async {
       stdout.write('.');
     }
   }
-  stdout.writeln('');
-  stdout.writeln('Rendered $count samples to ${outDir.path}/');
+  stdout
+    ..writeln()
+    ..writeln('Rendered $count samples to ${outDir.path}/');
 }

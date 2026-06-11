@@ -7,6 +7,7 @@ import 'package:random_wallpaper_generator/src/core/storage/favorites_repository
 import 'package:random_wallpaper_generator/src/core/storage/settings_repository.dart';
 import 'package:random_wallpaper_generator/src/core/theme/app_theme.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 import 'package:random_wallpaper_generator/src/features/about/presentation/about_screen.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/home_screen.dart';
 import 'package:random_wallpaper_generator/src/features/paywall/presentation/paywall_screen.dart';
@@ -21,6 +22,9 @@ class RandomWallpaperGeneratorApp extends StatelessWidget {
       providers: [
         RepositoryProvider<WallpaperRegistry>(
           create: (_) => const WallpaperRegistry(),
+        ),
+        RepositoryProvider<WallpaperService>(
+          create: (_) => const WallpaperService(),
         ),
         RepositoryProvider<FavoritesRepository>(
           create: (_) => FavoritesRepository(),

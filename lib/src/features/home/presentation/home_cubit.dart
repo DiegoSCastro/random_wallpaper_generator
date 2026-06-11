@@ -2,18 +2,15 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:random_wallpaper_generator/src/core/wallpaper/exporter.dart';
-import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
-import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_point.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/palette.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
-import 'package:random_wallpaper_generator/src/core/wallpaper/renderer.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/render_pipeline.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 
 enum HomeStatus { initial, generating, ready, error }
 
@@ -63,7 +60,9 @@ class HomeState extends Equatable {
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit({
     required WallpaperRegistry registry,
+    required WallpaperService wallpaperService,
   })  : _registry = registry,
+        _wallpaperService = wallpaperService,
         super(const HomeState(
           status: HomeStatus.initial,
           system: WallpaperSystem.lorenz,
@@ -72,6 +71,7 @@ class HomeCubit extends Cubit<HomeState> {
         ));
 
   final WallpaperRegistry _registry;
+  final WallpaperService _wallpaperService;
 
   Future<void> loadInitial() async {
     await regenerate();
@@ -96,10 +96,10 @@ class HomeCubit extends Cubit<HomeState> {
     ));
     try {
       final generator = _registry.forSystem(state.system);
-      final result = await _generate(
+      final result = await const RenderPipeline().render(
         generator: generator,
         params: params,
-        palette: palette,
+        colorsArgb: palette.colors().map((c) => c.toARGB32()).toList(),
         width: 1080,
         height: 1920,
       );
@@ -125,65 +125,67 @@ class HomeCubit extends Cubit<HomeState> {
     await regenerate(randomizePalette: false);
   }
 
-  Future<void> apply(BuildContext context) async {
+  Future<void> saveToGallery(BuildContext context) async {
     if (!state.isReady) return;
-    final path = await saveImageAsPng(state.image!);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved to $path — apply from your gallery.')),
-    );
+    try {
+      await _wallpaperService.saveToGallery(state.image!);
+      if (!context.mounted) return;
+      _showSnackBar(
+        context,
+        'Saved to Photos in "${WallpaperService.galleryAlbum}"',
+      );
+    } on GalleryAccessDeniedException {
+      if (!context.mounted) return;
+      _showSnackBar(
+        context,
+        'Allow photo library access in Settings to save wallpapers.',
+        isError: true,
+      );
+    } on Exception catch (e) {
+      if (!context.mounted) return;
+      _showSnackBar(context, 'Could not save: $e', isError: true);
+    }
   }
 
-  Future<void> save(BuildContext context) async {
+  Future<void> applyWallpaper(
+    BuildContext context,
+    WallpaperTarget target,
+  ) async {
     if (!state.isReady) return;
-    final path = await saveImageAsPng(state.image!);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved to $path')),
-    );
+    try {
+      final result = await _wallpaperService.apply(
+        image: state.image!,
+        target: target,
+      );
+      if (!context.mounted) return;
+      _showSnackBar(context, '${result.title}. ${result.message}');
+    } on GalleryAccessDeniedException {
+      if (!context.mounted) return;
+      _showSnackBar(
+        context,
+        'Allow photo library access in Settings to apply wallpapers.',
+        isError: true,
+      );
+    } on WallpaperApplyException catch (e) {
+      if (!context.mounted) return;
+      _showSnackBar(context, e.message, isError: true);
+    } on Exception catch (e) {
+      if (!context.mounted) return;
+      _showSnackBar(context, 'Could not apply: $e', isError: true);
+    }
+  }
+
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
+    final snackBar = isError
+        ? SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red.shade800,
+          )
+        : SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }
-
-Future<ui.Image> _generate({
-  required Generator generator,
-  required GeneratorParams params,
-  required WallpaperPalette palette,
-  required int width,
-  required int height,
-}) async {
-  final points = await compute(
-    _generatePointsIsolate,
-    _PointsJob(
-      generator: generator,
-      params: params,
-    ),
-  );
-  return const WallpaperRenderer().render(
-    points: points,
-    palette: palette,
-    params: params,
-    width: width,
-    height: height,
-  );
-}
-
-class _PointsJob {
-  const _PointsJob({
-    required this.generator,
-    required this.params,
-  });
-  final Generator generator;
-  final GeneratorParams params;
-}
-
-List<WallpaperPoint> _generatePointsIsolate(_PointsJob job) {
-  return job.generator.generate(
-    params: job.params,
-    maxPoints: job.params.iterations,
-    seed: job.params.seed,
-  );
-}
-
-// Quiet the analyzer for the type that's only re-imported transitively.
-// ignore: unused_element
-typedef _Unused = WallpaperPoint;

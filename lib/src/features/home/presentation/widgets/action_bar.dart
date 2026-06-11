@@ -37,10 +37,19 @@ class ActionBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _GlassIconButton(icon: Icons.refresh_rounded, onPressed: onRegenerate),
+          _GlassIconButton(
+            icon: Icons.refresh_rounded,
+            onPressed: state.isGenerating ? null : onRegenerate,
+          ),
           _GlassIconButton(icon: Icons.grid_view_rounded, onPressed: onPickSystem),
-          _GlassIconButton(icon: Icons.download_rounded, onPressed: onSave),
-          _GlassPrimaryButton(icon: Icons.wallpaper_rounded, onPressed: onApply),
+          _GlassIconButton(
+            icon: Icons.download_rounded,
+            onPressed: state.isGenerating ? null : onSave,
+          ),
+          _GlassPrimaryButton(
+            icon: Icons.wallpaper_rounded,
+            onPressed: state.isGenerating ? null : onApply,
+          ),
         ],
       ),
     );
@@ -48,10 +57,13 @@ class ActionBar extends StatelessWidget {
 }
 
 class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({required this.icon, required this.onPressed});
+  const _GlassIconButton({
+    required this.icon,
+    required this.onPressed,
+  });
 
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +79,11 @@ class _GlassIconButton extends StatelessWidget {
             child: SizedBox(
               width: 48,
               height: 48,
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(
+                icon,
+                color: Colors.white.withValues(alpha: onPressed == null ? 0.35 : 1),
+                size: 22,
+              ),
             ),
           ),
         ),
@@ -80,7 +96,7 @@ class _GlassPrimaryButton extends StatelessWidget {
   const _GlassPrimaryButton({required this.icon, required this.onPressed});
 
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +113,11 @@ class _GlassPrimaryButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, color: Colors.white, size: 20),
+                  Icon(
+                    icon,
+                    color: Colors.white.withValues(alpha: onPressed == null ? 0.35 : 1),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   const Text(
                     'Apply',

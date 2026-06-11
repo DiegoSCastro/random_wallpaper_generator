@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/home_cubit.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/action_bar.dart';
+import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/apply_wallpaper_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/system_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/wallpaper_canvas.dart';
 
@@ -16,6 +18,7 @@ class HomeScreen extends StatelessWidget {
     return BlocProvider(
       create: (ctx) => HomeCubit(
         registry: ctx.read<WallpaperRegistry>(),
+        wallpaperService: ctx.read<WallpaperService>(),
       )..loadInitial(),
       child: const _HomeView(),
     );
@@ -55,17 +58,22 @@ class _HomeView extends StatelessWidget {
                   child: ActionBar(
                     state: state,
                     onRegenerate: cubit.regenerate,
-                    onSave: () => cubit.save(context),
-                    onApply: () => cubit.apply(context),
+                    onSave: () => cubit.saveToGallery(context),
+                    onApply: () => _openApplySheet(context, cubit),
                     onPickSystem: () => _openSystemPicker(context, cubit, state.system),
                   ),
                 ),
               ),
               if (state.isGenerating)
-                const Positioned.fill(
+                Positioned.fill(
                   child: ColoredBox(
-                    color: Color(0x33000000),
-                    child: Center(child: CircularProgressIndicator()),
+                    color: Colors.black.withValues(alpha: 0.45),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -73,6 +81,18 @@ class _HomeView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _openApplySheet(BuildContext context, HomeCubit cubit) async {
+    if (!cubit.state.isReady) return;
+    final target = await showModalBottomSheet<WallpaperTarget>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => const ApplyWallpaperSheet(),
+    );
+    if (target != null && context.mounted) {
+      await cubit.applyWallpaper(context, target);
+    }
   }
 
   Future<void> _openSystemPicker(
