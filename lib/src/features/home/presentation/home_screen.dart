@@ -67,6 +67,7 @@ class _HomeView extends StatelessWidget {
                   // (status-bar / title region) is transparent to gestures
                   // so the canvas receives long-press there.
                   child: _TopBar(
+                    systemName: state.system.displayName,
                     onPickTheme: () => _openThemePicker(context, cubit),
                     onOpenSettings: () => Navigator.of(context).pushNamed('/settings'),
                   ),
@@ -166,10 +167,12 @@ typedef _Unused = WallpaperSystem;
 /// the wallpaper even in the status-bar / notch area.
 class _TopBar extends StatelessWidget {
   const _TopBar({
+    required this.systemName,
     required this.onPickTheme,
     required this.onOpenSettings,
   });
 
+  final String systemName;
   final VoidCallback onPickTheme;
   final VoidCallback onOpenSettings;
 
@@ -197,7 +200,7 @@ class _TopBar extends StatelessWidget {
               // never fire. The IconButtons below still receive their taps.
               child: IgnorePointer(
                 child: Text(
-                  'Random Wallpaper',
+                  systemName,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
