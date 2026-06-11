@@ -112,8 +112,6 @@ class PixelRasterizer {
         pixels,
         width,
         height,
-        downscale: 4,
-        strength: 0.60, // 1.5x the previous uniform 0.40 (center boost).
       );
     }
 
@@ -127,12 +125,12 @@ class PixelRasterizer {
     // Bilinear is critical: nearest just resamples the same dot edges.
     // mix=0.65 is enough to crush the 1-pixel stipple alternation
     // while leaving the low-frequency colour ribbon readable.
-    _applyBilinearSmooth(pixels, width, height, mix: 0.65);
+    _applyBilinearSmooth(pixels, width, height);
 
     // Subtle film grain — intensity 0.02 keeps it organic, not gritty.
     // Per-channel noise reads as luminance grain rather than colour
     // noise, which on a phone wallpaper looks like paper texture.
-    _applyFineGrain(pixels, width, height, intensity: 0.02, seed: 0xA5F3);
+    _applyFineGrain(pixels, width, height);
 
     // Vignette goes LAST — after all the smooth, grain, and trail
     // work is done. If we applied it to the background first the
@@ -222,7 +220,9 @@ class PixelRasterizer {
     // Pass 1: box-average downsample 4x.
     for (var y = 0; y < dh; y++) {
       for (var x = 0; x < dw; x++) {
-        var r = 0, g = 0, b = 0;
+        var r = 0;
+        var g = 0;
+        var b = 0;
         var count = 0;
         for (var dy = 0; dy < downscale; dy++) {
           final sy = y * downscale + dy;
@@ -251,7 +251,9 @@ class PixelRasterizer {
     for (var y = 0; y < dh; y++) {
       final row = y * dw * 4;
       for (var x = 0; x < dw; x++) {
-        double r = 0, g = 0, b = 0;
+        double r = 0;
+        double g = 0;
+        double b = 0;
         // Mirror-clamp the kernel taps at the borders.
         for (var k = -2; k <= 2; k++) {
           final sx = (x + k).clamp(0, dw - 1);
@@ -272,7 +274,9 @@ class PixelRasterizer {
     // Pass 2b: vertical Gaussian blur (5x1, same weights).
     for (var y = 0; y < dh; y++) {
       for (var x = 0; x < dw; x++) {
-        double r = 0, g = 0, b = 0;
+        double r = 0;
+        double g = 0;
+        double b = 0;
         for (var k = -2; k <= 2; k++) {
           final sy = (y + k).clamp(0, dh - 1);
           final i = (sy * dw + x) * 4;
@@ -306,7 +310,7 @@ class PixelRasterizer {
         //       = 0.4 + 0.6 * (1.0 - smoothstep(0.3, 1.0, dist))
         // At dist <= 0.3: smoothstep = 0  -> mask = 1.0
         // At dist >= 1.0: smoothstep = 1  -> mask = 0.4
-        final s = _smoothstep(0.3, 1.0, dist);
+        final s = _smoothstep(0.3, 1, dist);
         mask[rowBase + x] = 0.4 + 0.6 * (1.0 - s);
       }
     }

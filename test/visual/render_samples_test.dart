@@ -8,7 +8,6 @@
 //   build/samples/blend/blend_<0..100>.png   (5 frames of long-press anim)
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -144,7 +143,7 @@ void main() {
           width: width,
           height: height,
         );
-        final Uint8List bytes = await imageToPngBytes(image);
+        final bytes = await imageToPngBytes(image);
         final file = File('${outDir.path}/${palette.name}.png');
         await file.writeAsBytes(bytes, flush: true);
         image.dispose();

@@ -21,7 +21,6 @@ class ThemePickerSheet extends StatelessWidget {
             border: Border(
               top: BorderSide(
                 color: Colors.white.withValues(alpha: 0.18),
-                width: 1,
               ),
             ),
           ),
@@ -62,7 +61,7 @@ class ThemePickerSheet extends StatelessWidget {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: WallpaperTheme.all.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
                     final t = WallpaperTheme.all[i];
                     return _ThemeTile(theme: t);
@@ -149,7 +148,6 @@ class _PaletteSwatch extends StatelessWidget {
         ),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.18),
-          width: 1,
         ),
       ),
     );
