@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -174,19 +176,20 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? Colors.white : Colors.black;
     return SizedBox(
       height: 44,
       child: Row(
         children: [
-          // Leading spacer: balances the trailing 96px icon column so the
+          // Leading spacer: balances the trailing 88px icon column so the
           // title sits on the true horizontal center of the screen, not
           // the center of the space between the leading edge and the
           // icons. Hit-test transparent so the canvas still receives
           // long-press in the top-left region.
-          const SizedBox(width: 96),
-          // Trailing icons — the AppBar usually gives IconButtons a 48px
-          // hit area each, so 2 of them need 96px on the right.
+          const SizedBox(width: 88),
+          // Trailing icons — 2 liquid-glass buttons at 40px each + 8px gap
+          // = 88px on the right. The buttons are frosted so the wallpaper
+          // remains visible behind them and they stay readable on bright
+          // and dark wallpapers alike.
           Expanded(
             child: Center(
               // IgnorePointer: title is decorative. If it consumed hits, the
@@ -205,28 +208,90 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: 96,
+            width: 88,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.collections_bookmark_rounded),
+                _LiquidGlassIconButton(
+                  icon: Icons.collections_bookmark_rounded,
                   tooltip: 'Themes',
-                  color: iconColor,
-                  visualDensity: VisualDensity.compact,
+                  isDark: isDark,
                   onPressed: onPickTheme,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.tune_rounded),
+                const SizedBox(width: 8),
+                _LiquidGlassIconButton(
+                  icon: Icons.tune_rounded,
                   tooltip: 'Settings',
-                  color: iconColor,
-                  visualDensity: VisualDensity.compact,
+                  isDark: isDark,
                   onPressed: onOpenSettings,
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Liquid-glass icon button used in the top bar.
+///
+/// Frosted background (`BackdropFilter` + low-alpha tint) so the wallpaper
+/// remains visible behind the chrome and the button stays readable on both
+/// bright and dark wallpapers. The 1px hairline border further separates
+/// the button from the wallpaper without adding a hard edge.
+class _LiquidGlassIconButton extends StatelessWidget {
+  const _LiquidGlassIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.isDark,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool isDark;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = isDark
+        ? Colors.black.withValues(alpha: 0.25)
+        : Colors.white.withValues(alpha: 0.12);
+    final iconColor = isDark ? Colors.white : Colors.black;
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: onPressed,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: tint,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 24,
+                    color: iconColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
