@@ -9,10 +9,10 @@ import 'package:random_wallpaper_generator/src/core/wallpaper/registry.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/themes.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/home_cubit.dart';
+import 'package:random_wallpaper_generator/src/features/home/presentation/systems_gallery_screen.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/action_bar.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/apply_wallpaper_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/palette_picker_sheet.dart';
-import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/system_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/theme_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/wallpaper_canvas.dart';
 
@@ -68,6 +68,7 @@ class _HomeView extends StatelessWidget {
                   // (status-bar / title region) is transparent to gestures
                   // so the canvas receives long-press there.
                   child: _TopBar(
+                    systemName: state.system.displayName,
                     onPickPalette: () => _openPalettePicker(context, cubit, state.palette),
                     onPickTheme: () => _openThemePicker(context, cubit),
                     onOpenSettings: () => Navigator.of(context).pushNamed('/settings'),
@@ -125,11 +126,12 @@ class _HomeView extends StatelessWidget {
     HomeCubit cubit,
     WallpaperSystem current,
   ) async {
-    final picked = await showModalBottomSheet<WallpaperSystem>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => SystemPickerSheet(
-        current: current,
+    // Full-screen gallery of static previews — the previews are baked
+    // at build time so opening the screen is instant (no runtime
+    // rasterization). The cubit applies the picked system on return.
+    final picked = await Navigator.of(context).push<WallpaperSystem>(
+      MaterialPageRoute(
+        builder: (_) => SystemsGalleryScreen(current: current),
       ),
     );
     if (picked != null) {
@@ -183,11 +185,13 @@ typedef _Unused = WallpaperSystem;
 /// the wallpaper even in the status-bar / notch area.
 class _TopBar extends StatelessWidget {
   const _TopBar({
+    required this.systemName,
     required this.onPickPalette,
     required this.onPickTheme,
     required this.onOpenSettings,
   });
 
+  final String systemName;
   final VoidCallback onPickPalette;
   final VoidCallback onPickTheme;
   final VoidCallback onOpenSettings;
@@ -225,19 +229,19 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: 144,
+            width: 136,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.palette_rounded),
+                _LiquidGlassIconButton(
+                  icon: Icons.palette_rounded,
                   tooltip: 'Color palette',
-                  color: iconColor,
-                  visualDensity: VisualDensity.compact,
+                  isDark: isDark,
                   onPressed: onPickPalette,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.collections_bookmark_rounded),
+                const SizedBox(width: 8),
+                _LiquidGlassIconButton(
+                  icon: Icons.collections_bookmark_rounded,
                   tooltip: 'Themes',
                   isDark: isDark,
                   onPressed: onPickTheme,

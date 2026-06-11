@@ -89,6 +89,51 @@ class GeneratorParams extends Equatable {
           iterations: base.iterations,
           seed: seed,
         );
+      case WallpaperSystem.thomas:
+        return GeneratorParams(
+          system: system,
+          b: vary(base.b, amount: 0.2),
+          iterations: base.iterations,
+          seed: seed,
+        );
+      case WallpaperSystem.sprott:
+        return base.copyWith(seed: seed);
+      case WallpaperSystem.halvorsen:
+        return GeneratorParams(
+          system: system,
+          a: vary(base.a, amount: 0.2),
+          iterations: base.iterations,
+          seed: seed,
+        );
+      case WallpaperSystem.dadras:
+        return GeneratorParams(
+          system: system,
+          a: vary(base.a, amount: 0.15),
+          b: vary(base.b, amount: 0.15),
+          c: vary(base.c, amount: 0.2),
+          d: vary(base.d, amount: 0.2),
+          e: vary(base.e, amount: 0.1),
+          iterations: base.iterations,
+          seed: seed,
+        );
+      case WallpaperSystem.chen:
+        return GeneratorParams(
+          system: system,
+          a: vary(base.a, amount: 0.15),
+          b: vary(base.b, amount: 0.2),
+          c: vary(base.c, amount: 0.1),
+          iterations: base.iterations,
+          seed: seed,
+        );
+      case WallpaperSystem.lu:
+        return GeneratorParams(
+          system: system,
+          a: vary(base.a, amount: 0.15),
+          b: vary(base.b, amount: 0.2),
+          c: vary(base.c, amount: 0.1),
+          iterations: base.iterations,
+          seed: seed,
+        );
     }
   }
 
@@ -135,6 +180,49 @@ class GeneratorParams extends Equatable {
     c: 5.7,
   );
 
+  /// Thomas defaults (b=0.208186).
+  static const GeneratorParams thomasDefault = GeneratorParams(
+    system: WallpaperSystem.thomas,
+    b: 0.208186,
+  );
+
+  /// Sprott minimal case B defaults — no free params in canonical form.
+  static const GeneratorParams sprottDefault = GeneratorParams(
+    system: WallpaperSystem.sprott,
+  );
+
+  /// Halvorsen defaults (a=1.89).
+  static const GeneratorParams halvorsenDefault = GeneratorParams(
+    system: WallpaperSystem.halvorsen,
+    a: 1.89,
+  );
+
+  /// Dadras defaults (a=3, b=2.7, c=1.7, d=2, e=9).
+  static const GeneratorParams dadrasDefault = GeneratorParams(
+    system: WallpaperSystem.dadras,
+    a: 3,
+    b: 2.7,
+    c: 1.7,
+    d: 2,
+    e: 9,
+  );
+
+  /// Chen defaults (a=40, b=3, c=28).
+  static const GeneratorParams chenDefault = GeneratorParams(
+    system: WallpaperSystem.chen,
+    a: 40,
+    b: 3,
+    c: 28,
+  );
+
+  /// Lu defaults (a=36, b=3, c=20).
+  static const GeneratorParams luDefault = GeneratorParams(
+    system: WallpaperSystem.lu,
+    a: 36,
+    b: 3,
+    c: 20,
+  );
+
   /// Resolved defaults for a system.
   static GeneratorParams defaultsFor(WallpaperSystem system) {
     switch (system) {
@@ -148,6 +236,18 @@ class GeneratorParams extends Equatable {
         return aizawaDefault;
       case WallpaperSystem.rossler:
         return rosslerDefault;
+      case WallpaperSystem.thomas:
+        return thomasDefault;
+      case WallpaperSystem.sprott:
+        return sprottDefault;
+      case WallpaperSystem.halvorsen:
+        return halvorsenDefault;
+      case WallpaperSystem.dadras:
+        return dadrasDefault;
+      case WallpaperSystem.chen:
+        return chenDefault;
+      case WallpaperSystem.lu:
+        return luDefault;
     }
   }
 

@@ -2,10 +2,16 @@ import 'package:flutter/foundation.dart';
 
 import 'package:random_wallpaper_generator/src/core/wallpaper/generator.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/aizawa.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/chen.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/clifford.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/dadras.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/halvorsen.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/hopalong.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/lorenz.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/lu.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/generators/rossler.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/sprott.dart';
+import 'package:random_wallpaper_generator/src/core/wallpaper/generators/thomas.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/generator_params.dart';
 import 'package:random_wallpaper_generator/src/core/wallpaper/models/wallpaper_system.dart';
 
@@ -21,6 +27,12 @@ class WallpaperRegistry {
     WallpaperSystem.hopalong: HopalongGenerator(),
     WallpaperSystem.aizawa: AizawaGenerator(),
     WallpaperSystem.rossler: RosslerGenerator(),
+    WallpaperSystem.thomas: ThomasGenerator(),
+    WallpaperSystem.sprott: SprottGenerator(),
+    WallpaperSystem.halvorsen: HalvorsenGenerator(),
+    WallpaperSystem.dadras: DadrasGenerator(),
+    WallpaperSystem.chen: ChenGenerator(),
+    WallpaperSystem.lu: LuGenerator(),
   };
 
   Generator forSystem(WallpaperSystem system) {
