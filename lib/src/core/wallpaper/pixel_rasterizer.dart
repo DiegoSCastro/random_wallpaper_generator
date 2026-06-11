@@ -105,8 +105,17 @@ class PixelRasterizer {
     }
 
     // Soft bloom to give the structure a halo of color.
+    // Asymmetric: stronger in the center, attenuated at the edges
+    // (radial mask with smoothstep), so dark backgrounds don't get a
+    // flat halo and light backgrounds don't get a washed-out cloth.
     if (trail.isNotEmpty) {
-      _applyBloom(pixels, width, height, downscale: 4, strength: 0.40);
+      _applyBloom(
+        pixels,
+        width,
+        height,
+        downscale: 4,
+        strength: 0.60, // 1.5x the previous uniform 0.40 (center boost).
+      );
     }
 
     return pixels;
@@ -151,25 +160,40 @@ class PixelRasterizer {
 
   // ---------- bloom pass ----------
 
-  /// Adds a soft bloom on top of the rendered points. We average the
-  /// existing pixel buffer into a low-res downsample and blend it back
-  /// at low alpha — much cheaper than a true 2D Gaussian and visually
-  /// good enough for a 200k-point stipple.
+  /// Adds an asymmetric (radial) soft bloom on top of the rendered points.
   ///
-  /// [strength] is the alpha applied when re-compositing (0..1). 0.0
-  /// disables the pass. Recommended: 0.25-0.55.
+  /// Pipeline:
+  ///   1. Downsample 4x (box average) into a low-res buffer.
+  ///   2. Two-pass separable Gaussian blur (1x5 horizontal, then 5x1
+  ///      vertical) on that low-res buffer for a softer, more natural
+  ///      falloff than a single box average.
+  ///   3. Up-sample (nearest) back to the full canvas, then composite
+  ///      over the source with a position-dependent alpha:
+  ///        alpha(x,y) = strength * mask(x,y)
+  ///      where
+  ///        mask = mix(0.4, 1.0, 1.0 - smoothstep(0.3, 1.0, dist))
+  ///      with `dist` = distance from center / min(w,h)/2.
+  ///      So the center gets full [strength] and the corners get
+  ///      0.4 * strength, with a smooth falloff between 0.3 and 1.0
+  ///      of the normalized distance. This kills the "flat halo"
+  ///      on dark backgrounds and the "washed-out cloth" on light
+  ///      backgrounds — both are symptoms of uniform bloom.
+  ///
+  /// [strength] is the center alpha (0..1). 0.0 disables the pass.
+  /// Recommended: 0.45-0.70.
   static void _applyBloom(
     Uint8List pixels,
     int width,
     int height, {
     int downscale = 4,
-    double strength = 0.40,
+    double strength = 0.60,
   }) {
     final dw = (width / downscale).floor();
     final dh = (height / downscale).floor();
     if (dw <= 0 || dh <= 0) return;
     final down = Uint8List(dw * dh * 4);
 
+    // Pass 1: box-average downsample 4x.
     for (var y = 0; y < dh; y++) {
       for (var x = 0; x < dw; x++) {
         var r = 0, g = 0, b = 0;
@@ -195,9 +219,78 @@ class PixelRasterizer {
       }
     }
 
+    // Pass 2a: horizontal Gaussian blur (1x5, sigma ~= 1.0).
+    // Weights for sigma=1.0: [0.061, 0.245, 0.388, 0.245, 0.061] (sum=1.0).
+    final temp = Uint8List(dw * dh * 4);
+    for (var y = 0; y < dh; y++) {
+      final row = y * dw * 4;
+      for (var x = 0; x < dw; x++) {
+        double r = 0, g = 0, b = 0;
+        // Mirror-clamp the kernel taps at the borders.
+        for (var k = -2; k <= 2; k++) {
+          final sx = (x + k).clamp(0, dw - 1);
+          final i = row + sx * 4;
+          final w = _gaussW[k + 2];
+          r += down[i] * w;
+          g += down[i + 1] * w;
+          b += down[i + 2] * w;
+        }
+        final j = row + x * 4;
+        temp[j] = r.round().clamp(0, 255);
+        temp[j + 1] = g.round().clamp(0, 255);
+        temp[j + 2] = b.round().clamp(0, 255);
+        temp[j + 3] = 255;
+      }
+    }
+
+    // Pass 2b: vertical Gaussian blur (5x1, same weights).
+    for (var y = 0; y < dh; y++) {
+      for (var x = 0; x < dw; x++) {
+        double r = 0, g = 0, b = 0;
+        for (var k = -2; k <= 2; k++) {
+          final sy = (y + k).clamp(0, dh - 1);
+          final i = (sy * dw + x) * 4;
+          final w = _gaussW[k + 2];
+          r += temp[i] * w;
+          g += temp[i + 1] * w;
+          b += temp[i + 2] * w;
+        }
+        final j = (y * dw + x) * 4;
+        down[j] = r.round().clamp(0, 255);
+        down[j + 1] = g.round().clamp(0, 255);
+        down[j + 2] = b.round().clamp(0, 255);
+        down[j + 3] = 255;
+      }
+    }
+
+    // Pre-compute the radial mask once. It is position-dependent but
+    // resolution-independent, so we store the alpha multiplier for
+    // every (x, y) in the full-res canvas.
+    final cx = width / 2.0;
+    final cy = height / 2.0;
+    final maxDist = math.min(width, height) / 2.0;
+    final mask = Float32List(width * height);
+    for (var y = 0; y < height; y++) {
+      final dy = y - cy;
+      final rowBase = y * width;
+      for (var x = 0; x < width; x++) {
+        final dx = x - cx;
+        final dist = math.sqrt(dx * dx + dy * dy) / maxDist;
+        // mask = mix(0.4, 1.0, 1.0 - smoothstep(0.3, 1.0, dist))
+        //       = 0.4 + 0.6 * (1.0 - smoothstep(0.3, 1.0, dist))
+        // At dist <= 0.3: smoothstep = 0  -> mask = 1.0
+        // At dist >= 1.0: smoothstep = 1  -> mask = 0.4
+        final s = _smoothstep(0.3, 1.0, dist);
+        mask[rowBase + x] = 0.4 + 0.6 * (1.0 - s);
+      }
+    }
+
+    // Composite the blurred low-res back over the source, weighted by
+    // the radial mask.
     for (var y = 0; y < height; y++) {
       final sy = (y / downscale).floor().clamp(0, dh - 1);
       final row = y * width * 4;
+      final maskRow = y * width;
       for (var x = 0; x < width; x++) {
         final sx = (x / downscale).floor().clamp(0, dw - 1);
         final j = (sy * dw + sx) * 4;
@@ -205,10 +298,22 @@ class PixelRasterizer {
           pixels,
           row + x * 4,
           (0xFF << 24) | (down[j] << 16) | (down[j + 1] << 8) | down[j + 2],
-          strength,
+          strength * mask[maskRow + x],
         );
       }
     }
+  }
+
+  // Gaussian weights for sigma ~= 1.0, 5-tap. Symmetric, sum = 1.0.
+  static const List<double> _gaussW = <double>[
+    0.061, 0.245, 0.388, 0.245, 0.061,
+  ];
+
+  /// GLSL-style smoothstep(edge0, edge1, x) with edge0 < edge1.
+  /// Returns 0 below edge0, 1 above edge1, smooth Hermite in between.
+  static double _smoothstep(double edge0, double edge1, double x) {
+    final t = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
   }
 
   // ---------- helpers ----------
