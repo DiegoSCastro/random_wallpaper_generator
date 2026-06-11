@@ -37,7 +37,9 @@ Future<void> main() async {
       final points = generator.generate(params: params, maxPoints: iterations);
       final image = await renderer.render(
         points: points,
-        palette: palette,
+        paletteA: palette,
+        paletteB: palette,
+        blend: 0,
         params: params,
         width: width,
         height: height,
