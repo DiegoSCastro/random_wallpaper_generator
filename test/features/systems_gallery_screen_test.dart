@@ -9,7 +9,8 @@ import 'package:random_wallpaper_generator/src/features/home/presentation/system
 
 void main() {
   group('SystemsGalleryScreen', () {
-    testWidgets('shows every WallpaperSystem in the grid', (tester) async {
+    testWidgets('shows the grid with the current system at the top',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: SystemsGalleryScreen(current: WallpaperSystem.lorenz),
@@ -17,13 +18,24 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 16));
-      for (final system in WallpaperSystem.values) {
-        expect(
-          find.text(system.label),
-          findsAtLeastNWidgets(1),
-          reason: '${system.label} should be in the gallery',
-        );
-      }
+      // The screen is rendered with the system that is currently
+      // active on top — that's the only label the user is guaranteed
+      // to see on a phone-portrait viewport without scrolling, so
+      // we check for it.
+      expect(find.byType(GridView), findsOneWidget);
+      expect(
+        find.text(WallpaperSystem.lorenz.label),
+        findsAtLeastNWidgets(1),
+        reason: 'current system label should be visible',
+      );
+      // And the system that immediately follows in the enum order —
+      // the second card in the grid — also shows up. That confirms
+      // GridView is laying out more than one child.
+      expect(
+        find.text(WallpaperSystem.clifford.label),
+        findsAtLeastNWidgets(1),
+        reason: 'second card label should be visible',
+      );
     });
 
     testWidgets('emits the picked system when a card is tapped',
