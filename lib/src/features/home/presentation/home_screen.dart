@@ -11,6 +11,7 @@ import 'package:random_wallpaper_generator/src/core/wallpaper/wallpaper_service.
 import 'package:random_wallpaper_generator/src/features/home/presentation/home_cubit.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/action_bar.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/apply_wallpaper_sheet.dart';
+import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/palette_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/system_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/theme_picker_sheet.dart';
 import 'package:random_wallpaper_generator/src/features/home/presentation/widgets/wallpaper_canvas.dart';
@@ -67,7 +68,7 @@ class _HomeView extends StatelessWidget {
                   // (status-bar / title region) is transparent to gestures
                   // so the canvas receives long-press there.
                   child: _TopBar(
-                    systemName: state.system.displayName,
+                    onPickPalette: () => _openPalettePicker(context, cubit, state.palette),
                     onPickTheme: () => _openThemePicker(context, cubit),
                     onOpenSettings: () => Navigator.of(context).pushNamed('/settings'),
                   ),
@@ -147,6 +148,21 @@ class _HomeView extends StatelessWidget {
     }
   }
 
+  Future<void> _openPalettePicker(
+    BuildContext context,
+    HomeCubit cubit,
+    WallpaperPalette current,
+  ) async {
+    final picked = await showModalBottomSheet<WallpaperPalette>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => PalettePickerSheet(current: current),
+    );
+    if (picked != null && picked != current) {
+      await cubit.changePalette(picked);
+    }
+  }
+
   /// Picks the next palette in the enum, cycling back to the start.
   /// Used by the tap gesture on the canvas so users can cycle palettes
   /// without seeing the same one twice in a row.
@@ -167,12 +183,12 @@ typedef _Unused = WallpaperSystem;
 /// the wallpaper even in the status-bar / notch area.
 class _TopBar extends StatelessWidget {
   const _TopBar({
-    required this.systemName,
+    required this.onPickPalette,
     required this.onPickTheme,
     required this.onOpenSettings,
   });
 
-  final String systemName;
+  final VoidCallback onPickPalette;
   final VoidCallback onPickTheme;
   final VoidCallback onOpenSettings;
 
@@ -183,16 +199,14 @@ class _TopBar extends StatelessWidget {
       height: 44,
       child: Row(
         children: [
-          // Leading spacer: balances the trailing 88px icon column so the
+          // Leading spacer: balances the trailing 144px icon column so the
           // title sits on the true horizontal center of the screen, not
           // the center of the space between the leading edge and the
           // icons. Hit-test transparent so the canvas still receives
           // long-press in the top-left region.
-          const SizedBox(width: 88),
-          // Trailing icons — 2 liquid-glass buttons at 40px each + 8px gap
-          // = 88px on the right. The buttons are frosted so the wallpaper
-          // remains visible behind them and they stay readable on bright
-          // and dark wallpapers alike.
+          const SizedBox(width: 144),
+          // Trailing icons — the AppBar usually gives IconButtons a 48px
+          // hit area each, so 3 of them need 144px on the right.
           Expanded(
             child: Center(
               // IgnorePointer: title is decorative. If it consumed hits, the
@@ -211,12 +225,19 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: 88,
+            width: 144,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                _LiquidGlassIconButton(
-                  icon: Icons.collections_bookmark_rounded,
+                IconButton(
+                  icon: const Icon(Icons.palette_rounded),
+                  tooltip: 'Color palette',
+                  color: iconColor,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onPickPalette,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.collections_bookmark_rounded),
                   tooltip: 'Themes',
                   isDark: isDark,
                   onPressed: onPickTheme,
