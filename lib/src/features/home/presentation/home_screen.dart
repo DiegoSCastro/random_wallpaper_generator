@@ -34,22 +34,11 @@ class _HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Random Wallpaper'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.collections_bookmark_rounded),
-            tooltip: 'Themes',
-            onPressed: () => _openThemePicker(context, context.read<HomeCubit>()),
-          ),
-          IconButton(
-            icon: const Icon(Icons.tune_rounded),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.of(context).pushNamed('/settings'),
-          ),
-        ],
-      ),
+      // No appBar: the top bar is a Positioned overlay inside the Stack so
+      // hit tests pass through the empty chrome into the canvas. The user
+      // can long-press anywhere on the wallpaper — including the notch /
+      // status-bar area — and trigger re-palette. The icon buttons in the
+      // top bar still consume their own hit areas.
       body: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
           final cubit = context.read<HomeCubit>();
@@ -65,6 +54,21 @@ class _HomeView extends StatelessWidget {
                 onLongPress:
                     state.isReady ? () => cubit.changePalette(WallpaperPalette.random()) : null,
                 child: WallpaperCanvas(state: state),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: SafeArea(
+                  bottom: false,
+                  // Only the icon buttons catch hit tests; the empty chrome
+                  // (status-bar / title region) is transparent to gestures
+                  // so the canvas receives long-press there.
+                  child: _TopBar(
+                    onPickTheme: () => _openThemePicker(context, cubit),
+                    onOpenSettings: () => Navigator.of(context).pushNamed('/settings'),
+                  ),
+                ),
               ),
               Positioned(
                 left: 0,
@@ -153,3 +157,77 @@ class _HomeView extends StatelessWidget {
 // WallpaperSystem is used in the picker signature; keep the import alive.
 // ignore: unused_element
 typedef _Unused = WallpaperSystem;
+
+/// Top bar overlay. Renders the title centered between two icon buttons
+/// without a Material under the empty chrome — the empty regions of the
+/// bar are transparent to hit tests, so long-press on the canvas reaches
+/// the wallpaper even in the status-bar / notch area.
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.onPickTheme,
+    required this.onOpenSettings,
+  });
+
+  final VoidCallback onPickTheme;
+  final VoidCallback onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? Colors.white : Colors.black;
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          // Leading spacer: balances the trailing 96px icon column so the
+          // title sits on the true horizontal center of the screen, not
+          // the center of the space between the leading edge and the
+          // icons. Hit-test transparent so the canvas still receives
+          // long-press in the top-left region.
+          const SizedBox(width: 96),
+          // Trailing icons — the AppBar usually gives IconButtons a 48px
+          // hit area each, so 2 of them need 96px on the right.
+          Expanded(
+            child: Center(
+              // IgnorePointer: title is decorative. If it consumed hits, the
+              // canvas's long-press in the status-bar / title region would
+              // never fire. The IconButtons below still receive their taps.
+              child: IgnorePointer(
+                child: Text(
+                  'Random Wallpaper',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 96,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.collections_bookmark_rounded),
+                  tooltip: 'Themes',
+                  color: iconColor,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onPickTheme,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.tune_rounded),
+                  tooltip: 'Settings',
+                  color: iconColor,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onOpenSettings,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
