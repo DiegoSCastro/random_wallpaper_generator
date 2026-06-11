@@ -1,0 +1,14 @@
+include: package:very_good_analysis/analysis_options.yaml
+analyzer:
+  errors:
+    public_member_api_docs: ignore
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.mocks.dart"
+linter:
+  rules:
+    # Allow long lines for shader code and seed literals
+    lines_longer_than_80_chars: false
+    # Allow file-level ignores
+    avoid_relative_lib_imports: false
