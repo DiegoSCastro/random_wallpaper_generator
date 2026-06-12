@@ -186,9 +186,14 @@ class GeneratorParams extends Equatable {
     b: 0.208186,
   );
 
-  /// Sprott minimal case B defaults — no free params in canonical form.
+  /// Sprott defaults — canonical minimal case B (a=2.07, b=1.79).
+  /// Using the global Clifford defaults (a=b=1.7) makes the system
+  /// diverge to NaN within a few steps; these tuned coefficients
+  /// keep the trajectory bounded.
   static const GeneratorParams sprottDefault = GeneratorParams(
     system: WallpaperSystem.sprott,
+    a: 2.07,
+    b: 1.79,
   );
 
   /// Halvorsen defaults (a=1.89).

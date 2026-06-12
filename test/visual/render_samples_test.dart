@@ -3,7 +3,7 @@
 // Run: flutter test test/visual/render_samples_test.dart --reporter=expanded
 //
 // Output:
-//   build/samples/<system>_<palette>.png     (30 files)
+//   build/samples/<system>_<palette>.png     (66 files = 11 systems x 6 palettes)
 //   build/samples/themes/<theme_id>.png      (17 curated themes)
 //   build/samples/blend/blend_<0..100>.png   (5 frames of long-press anim)
 
@@ -62,7 +62,9 @@ void main() {
           count++;
         }
       }
-      expect(count, 30);
+      // 11 systems (5 original + 6 new in 2026-06-11: Thomas, Sprott,
+      // Halvorsen, Dadras, Chen, Lü) × 6 palettes.
+      expect(count, 11 * 6);
       debugPrint('Rendered $count samples to ${outDir.path}/');
     },
     timeout: const Timeout(Duration(minutes: 5)),
