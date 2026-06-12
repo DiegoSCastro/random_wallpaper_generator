@@ -28,9 +28,6 @@ class PixelRasterizer {
     _fill(pixels, width, height, colorsArgb.first);
 
     if (points.isEmpty) {
-      if (colorsArgb.length > 1) {
-        _applyVignette(pixels, width, height);
-      }
       return pixels;
     }
 
@@ -106,8 +103,8 @@ class PixelRasterizer {
     // Bloom removed (Diego, 2026-06-11): the asymmetric radial mask
     // was reading as a central hotspot ("apenas o centro da imagem
     // iluminando"). The v0.3 premium texture pass below — bilinear
-    // smooth + fine grain + vignette — already gives the wallpaper
-    // a premium look without the hot-spot artifact.
+    // smooth + fine grain — already gives the wallpaper a premium
+    // look without the hot-spot artifact.
 
     // v0.3 — premium texture pass.
     // The bloom uses a nearest-neighbour upsample, so the raw stipple
@@ -126,15 +123,10 @@ class PixelRasterizer {
     // noise, which on a phone wallpaper looks like paper texture.
     _applyFineGrain(pixels, width, height);
 
-    // Vignette goes LAST — after all the smooth, grain, and trail
-    // work is done. If we applied it to the background first the
-    // bright points would paint over the corner darkening, killing
-    // the "framed" premium look. Here it darkens everything — the
-    // empty corners and the bright centre alike — so the eye reads
-    // a consistent radial frame.
-    if (colorsArgb.length > 1) {
-      _applyVignette(pixels, width, height);
-    }
+    // Vignette removed (Diego, 2026-06-11): darkening the corners was
+    // reading as a "camera/microscope focus" effect — the centre looked
+    // illuminated and the edges disappeared. The wallpaper should fill
+    // the whole screen evenly so the system UI is the only frame.
 
     return pixels;
   }
@@ -326,13 +318,6 @@ class PixelRasterizer {
     }
   }
 
-  /// GLSL-style smoothstep(edge0, edge1, x) with edge0 < edge1.
-  /// Returns 0 below edge0, 1 above edge1, smooth Hermite in between.
-  static double _smoothstep(double edge0, double edge1, double x) {
-    final t = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-  }
-
   // ---------- helpers ----------
 
   static void _fill(Uint8List pixels, int width, int height, int argb) {
@@ -347,45 +332,6 @@ class PixelRasterizer {
         pixels[i + 1] = g;
         pixels[i + 2] = b;
         pixels[i + 3] = 255;
-      }
-    }
-  }
-
-  /// Subtle vignette darkens the edges toward black.
-  ///
-  /// Alpha curve: 0 inside [safe] (default 0.55) of normalized radius,
-  /// ramps to [edgeAlpha] (default 0.85) at the corners via a smoothstep
-  /// across [feather] (default 0.40) of normalized distance. The
-  /// v0.3 default of 0.85 is the task's "premium" target — visible
-  /// framing at the corners without crushing the centre. The wider
-  /// [safe] window keeps the bulk of the wallpaper untouched, which
-  /// reads as "subtle" in practice even with a strong corner alpha.
-  static void _applyVignette(
-    Uint8List pixels,
-    int width,
-    int height, {
-    double edgeAlpha = 0.85,
-    double safe = 0.55,
-    double feather = 0.40,
-  }) {
-    final cx = width / 2;
-    final cy = height / 2;
-    final maxDist = math.min(width, height) / 2 * 0.95;
-
-    final startFade = safe;
-    final endFade = (safe + feather).clamp(0.0, 1.0);
-
-    for (var y = 0; y < height; y++) {
-      final row = y * width * 4;
-      final dy = y - cy;
-      for (var x = 0; x < width; x++) {
-        final dx = x - cx;
-        final dist = math.sqrt(dx * dx + dy * dy) / maxDist;
-        if (dist <= startFade) continue;
-        final t = _smoothstep(startFade, endFade, dist);
-        final vignetteAlpha = edgeAlpha * t;
-        final i = row + x * 4;
-        _blendSrcOver(pixels, i, 0xFF000000, vignetteAlpha);
       }
     }
   }
