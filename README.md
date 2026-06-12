@@ -15,6 +15,21 @@ flutter test                   # unit tests
 flutter analyze                # static analysis
 ```
 
+## Workflow
+
+**No direct push to `main`.** Features, fixes, and docs land via pull requests. See
+[`docs/PR_WORKFLOW.md`](docs/PR_WORKFLOW.md) for the full guide and the local
+`pre-push` hook that blocks direct `main` pushes.
+
+Quick version:
+
+```bash
+git checkout -b feat/my-change
+# … work, commit …
+git push -u origin feat/my-change
+gh pr create --base main
+```
+
 ## Architecture
 
 ```
